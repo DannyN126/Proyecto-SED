@@ -1,0 +1,31 @@
+
+:root{
+  --spacing: 1rem;
+}
+
+body{
+  padding-bottom: 4rem;
+}
+
+.navbar-brand{
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+.card-game{
+  transition: transform .1s ease-in-out;
+}
+.card-game:hover{
+  transform: translateY(-2px);
+}
+
+/* Grid de tienda */
+#products-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+  gap: var(--spacing);
+}
+
+/* Utilidades */
+.hidden{ display: none !important; }
+.badge-pill{ border-radius: 999px; padding: .35rem .6rem; }
