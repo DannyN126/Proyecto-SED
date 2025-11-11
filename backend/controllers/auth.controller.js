@@ -89,11 +89,13 @@ class AuthController {
       const sessionId = crypto.randomUUID();
       const expiry = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
 
+      
       // Guardar sesión en BD
-      await pool.query(
+      /*await pool.query(
         'UPDATE users SET session_id = ?, session_expiry = ? WHERE id = ?',
         [sessionId, expiry, user.id]
-      );
+      );*/
+
 
       // Crear token firmado localmente
       const token = issueSessionToken({

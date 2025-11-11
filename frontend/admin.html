@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GameHub — Admin</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <nav class="navbar navbar-light bg-light mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="./index.html">GameHub</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <h2 class="mb-4">Panel de administración</h2>
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Crear producto</h5>
+        <form id="create-product-form" class="row g-3">
+          <div class="form-group col-md-4">
+            <label for="product-name">Nombre</label>
+            <input type="text" id="product-name" class="form-control" required />
+          </div>
+          <div class="form-group col-md-2">
+            <label for="product-price">Precio</label>
+            <input type="number" step="0.01" id="product-price" class="form-control" required />
+          </div>
+          <div class="form-group col-md-2">
+            <label for="product-stock">Stock</label>
+            <input type="number" id="product-stock" class="form-control" />
+          </div>
+          <div class="form-group col-md-4">
+            <label for="product-image">URL Imagen</label>
+            <input type="url" id="product-image" class="form-control" />
+          </div>
+          <div class="form-group col-12">
+            <label for="product-desc">Descripción</label>
+            <textarea id="product-desc" class="form-control" rows="2"></textarea>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary" type="submit">Crear</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="admin-products-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="text-center mt-5">
+    <div class="container">
+      <hr />
+      <small>© GameHub — Proyecto Ciberseguridad Web</small>
+    </div>
+  </footer>
+
+  <script src="./js/config.js"></script>
+  <script src="./js/main.js"></script>
+  <script src="./js/admin.js"></script>
+</body>
+</html>

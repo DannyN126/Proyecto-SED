@@ -6,55 +6,59 @@ const pool = require('../lib/database.js');
 
 // Helper de respuesta segura para router nativo
 function json(res, status, body) {
-    try {
-        res.writeHead(status, {
-        'Content-Type': 'application/json; charset=utf-8',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-XSS-Protection': '1; mode=block',
-        'Cache-Control': 'no-store'
+  try {
+    res.writeHead(status, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-XSS-Protection': '1; mode=block',
+      'Cache-Control': 'no-store'
     });
     res.end(JSON.stringify(body ?? {}));
-    } catch {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end('{"msg":"Error interno"}');
-    }
+  } catch {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end('{"msg":"Error interno"}');
+  }
 }
 
 // Validadores locales
 function isValidPrice(value) {
-    return typeof value === 'number' && isFinite(value) && value >= 0;
+  return typeof value === 'number' && isFinite(value) && value >= 0;
 }
 function isValidText(value) {
-    return typeof value === 'string' && value.trim().length > 0 && value.trim().length <= 255;
+  return typeof value === 'string' && value.trim().length > 0 && value.trim().length <= 255;
 }
 
 class ProductController {
+
   // ======== Crear producto ========
-    async addProduct(req, res) {
-        try {
-        const { name, price, image_url } = req.body;
-        const sellerId = req.user?.id;
+  async addProduct(req, res) {
+    try {
+      // 🟢 CAMBIO 1: ahora se incluyen los campos `stock` y `description`
+      const { name, price, image_url, stock, description } = req.body;
+      const sellerId = req.user?.id;
 
-        if (!sellerId) return json(res, 401, { msg: 'No autenticado' });
-        if (!isValidText(name) || !isValidPrice(price)) {
+      if (!sellerId) return json(res, 401, { msg: 'No autenticado' });
+      if (!isValidText(name) || !isValidPrice(price)) {
         return json(res, 400, { msg: 'Datos inválidos' });
-    }
+      }
 
-    const [result] = await pool.execute(
-        'INSERT INTO products (name, price, image_url, seller_id) VALUES (?, ?, ?, ?)',
-        [name.trim(), price, image_url?.trim() || null, sellerId]
-    );
+      // 🟢 CAMBIO 2: unificación de tabla → usar siempre `videogames` (antes había `products` en otros métodos)
+      // 🟢 CAMBIO 3: insert ampliado para guardar stock y descripción si existen en la base de datos
+      const [result] = await pool.execute(
+        'INSERT INTO videogames (name, price, image_url, stock, description, seller_id) VALUES (?, ?, ?, ?, ?, ?)',
+        [name.trim(), price, image_url?.trim() || null, stock ?? 0, description?.trim() || null, sellerId]
+      );
 
-        return json(res, 201, {
+      return json(res, 201, {
         msg: 'Producto agregado correctamente',
         productId: result.insertId
-    });
-        } catch (error) {
-        console.error('[addProduct]', error);
-        return json(res, 500, { msg: 'Error al agregar producto' });
+      });
+    } catch (error) {
+      console.error('[addProduct]', error);
+      return json(res, 500, { msg: 'Error al agregar producto' });
     }
-    }
+  }
 
   // ======== Actualizar producto ========
   async updateProduct(req, res) {
@@ -69,8 +73,9 @@ class ProductController {
         return json(res, 400, { msg: 'Datos inválidos' });
       }
 
+      // 🟢 CAMBIO 4: corregido el nombre de tabla → `videogames`
       const [result] = await pool.execute(
-        'UPDATE products SET name = ?, price = ?, image_url = ? WHERE id = ? AND seller_id = ?',
+        'UPDATE videogames SET name = ?, price = ?, image_url = ? WHERE id = ? AND seller_id = ?',
         [name.trim(), price, image_url?.trim() || null, id, sellerId]
       );
 
@@ -94,8 +99,9 @@ class ProductController {
       if (!sellerId) return json(res, 401, { msg: 'No autenticado' });
       if (!id || isNaN(Number(id))) return json(res, 400, { msg: 'ID inválido' });
 
+      // 🟢 CAMBIO 5: corregido el nombre de tabla → `videogames`
       const [result] = await pool.execute(
-        'DELETE FROM products WHERE id = ? AND seller_id = ?',
+        'DELETE FROM videogames WHERE id = ? AND seller_id = ?',
         [id, sellerId]
       );
 
@@ -116,8 +122,10 @@ class ProductController {
       const sellerId = req.user?.id;
       if (!sellerId) return json(res, 401, { msg: 'No autenticado' });
 
+      // 🟢 CAMBIO 6: corregido nombre de tabla → `videogames`
+      // 🟢 CAMBIO 7: agregado `stock` y `description` para devolver datos completos al frontend
       const [products] = await pool.execute(
-        'SELECT id, name, price, image_url, seller_id FROM products WHERE seller_id = ? ORDER BY id ASC',
+        'SELECT id, name, price, image_url, stock, description, seller_id FROM videogames WHERE seller_id = ? ORDER BY id ASC',
         [sellerId]
       );
 
