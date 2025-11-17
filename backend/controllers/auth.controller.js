@@ -85,42 +85,41 @@ class AuthController {
         return json(res, 401, { msg: 'Credenciales incorrectas' });
       }
 
-      // Generar session_id aleatorio
-      const sessionId = crypto.randomUUID();
-      const expiry = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
+      // Generar session_id y expiración
+const sessionId = crypto.randomUUID();
+const expiry = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
 
-      
-      // Guardar sesión en BD
-      /*await pool.query(
-        'UPDATE users SET session_id = ?, session_expiry = ? WHERE id = ?',
-        [sessionId, expiry, user.id]
-      );*/
+// Guardar sesión en BD
+await pool.query(
+  'UPDATE users SET session_id = ?, session_expiry = ? WHERE id = ?',
+  [sessionId, expiry, user.id]
+);
 
-
-      // Crear token firmado localmente
-      const token = issueSessionToken({
-        userId: user.id,
-        sessionId,
-        ttlSeconds: SESSION_TTL_SECONDS
-      });
+// Crear token usando el sessionId correcto
+const token = issueSessionToken({
+  userId: user.id,
+  sessionId: sessionId,
+  ttlSeconds: SESSION_TTL_SECONDS
+});
 
       // Construir cabecera Set-Cookie
       const cookieAttrs = getSessionCookieAttributes();
       const cookieHeader = `${cookieAttrs[0]}${token}; ${cookieAttrs.slice(1).join('; ')}`;
 
       res.writeHead(200, {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Set-Cookie': cookieHeader,
-        'X-Content-Type-Options': 'nosniff',
-        'Cache-Control': 'no-store'
+      'Content-Type': 'application/json; charset=utf-8',
+      'Set-Cookie': cookieHeader,
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'no-store'
       });
       res.end(
-        JSON.stringify({
-          msg: 'Login exitoso',
-          role: user.role,
-          expiresIn: SESSION_TTL_SECONDS
-        })
-      );
+    JSON.stringify({
+    msg: 'Login exitoso',
+    role: user.role,
+    token, // <--- AQUÍ se lo mandas al frontend
+    expiresIn: SESSION_TTL_SECONDS
+  })
+);
     } catch (error) {
       console.error('[login]', error);
       return json(res, 500, { msg: 'Error en el servidor' });

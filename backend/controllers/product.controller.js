@@ -43,12 +43,18 @@ class ProductController {
         return json(res, 400, { msg: 'Datos inválidos' });
       }
 
-      // 🟢 CAMBIO 2: unificación de tabla → usar siempre `videogames` (antes había `products` en otros métodos)
-      // 🟢 CAMBIO 3: insert ampliado para guardar stock y descripción si existen en la base de datos
       const [result] = await pool.execute(
-        'INSERT INTO videogames (name, price, image_url, stock, description, seller_id) VALUES (?, ?, ?, ?, ?, ?)',
-        [name.trim(), price, image_url?.trim() || null, stock ?? 0, description?.trim() || null, sellerId]
-      );
+  `INSERT INTO product (name, price, stock, description, image_url)
+  VALUES (?, ?, ?, ?, ?)`,
+  [
+    name.trim(),
+    Number(price),
+    Number(stock),
+    description?.trim() || null,
+    image_url?.trim() || null
+  ]
+);
+
 
       return json(res, 201, {
         msg: 'Producto agregado correctamente',
@@ -92,49 +98,51 @@ class ProductController {
 
   // ======== Eliminar producto ========
   async deleteProduct(req, res) {
-    try {
-      const { id } = req.params;
-      const sellerId = req.user?.id;
+  try {
+    const { id } = req.params;
 
-      if (!sellerId) return json(res, 401, { msg: 'No autenticado' });
-      if (!id || isNaN(Number(id))) return json(res, 400, { msg: 'ID inválido' });
+    console.log("ID RECIBIDO:", id); // DEBUG IMPORTANTE
 
-      // 🟢 CAMBIO 5: corregido el nombre de tabla → `videogames`
-      const [result] = await pool.execute(
-        'DELETE FROM videogames WHERE id = ? AND seller_id = ?',
-        [id, sellerId]
-      );
-
-      if (result.affectedRows === 0) {
-        return json(res, 404, { msg: 'Producto no encontrado o no autorizado' });
-      }
-
-      return json(res, 200, { msg: 'Producto eliminado correctamente' });
-    } catch (error) {
-      console.error('[deleteProduct]', error);
-      return json(res, 500, { msg: 'Error al eliminar producto' });
+    if (!id || isNaN(Number(id))) {
+      return json(res, 400, { msg: "ID inválido" });
     }
+
+    // Tabla correcta: product
+    // Ya NO usamos seller_id, porque no existe en tu BD GameStoreDB
+    const [result] = await pool.execute(
+      "DELETE FROM product WHERE id = ?",
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return json(res, 404, { msg: "Producto no encontrado" });
+    }
+
+    return json(res, 200, { msg: "Producto eliminado correctamente" });
+  } catch (error) {
+    console.error("[deleteProduct]", error);
+    return json(res, 500, { msg: "Error al eliminar producto" });
   }
+}
 
   // ======== Obtener productos del vendedor ========
   async getAllProducts(req, res) {
     try {
-      const sellerId = req.user?.id;
-      if (!sellerId) return json(res, 401, { msg: 'No autenticado' });
+        const [products] = await pool.execute(
+            'SELECT id, name, price, image_url, stock, description FROM product ORDER BY id ASC'
+        );
 
-      // 🟢 CAMBIO 6: corregido nombre de tabla → `videogames`
-      // 🟢 CAMBIO 7: agregado `stock` y `description` para devolver datos completos al frontend
-      const [products] = await pool.execute(
-        'SELECT id, name, price, image_url, stock, description, seller_id FROM videogames WHERE seller_id = ? ORDER BY id ASC',
-        [sellerId]
-      );
+        return json(res, 200, {
+            total: products.length,
+            products: products
+        });
 
-      return json(res, 200, { total: products.length, products });
     } catch (error) {
-      console.error('[getAllProducts]', error);
-      return json(res, 500, { msg: 'Error al obtener productos' });
+        console.error("[getAllProducts]", error);
+        return json(res, 500, { msg: "Error interno al obtener productos" });
     }
-  }
+}
+
 }
 
 const productController = new ProductController();

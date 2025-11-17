@@ -58,7 +58,7 @@ class IndexRoutes {
     },
         {
         method: 'get',
-        path: '/products',
+        path: '/product',
         controller: productController.getAllProducts,
         middlewares: [authenticate, authorize(['user', 'admin', 'superadmin'])]
     }

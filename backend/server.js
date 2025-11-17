@@ -30,6 +30,7 @@ const server = http.createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
     res.setHeader('Access-Control-Allow-Credentials', 'true')
+    res.setHeader('Vary', 'Origin');
 
     // Manejar preflight (navegadores modernos)
     if (req.method === 'OPTIONS') {

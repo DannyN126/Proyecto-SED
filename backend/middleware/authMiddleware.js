@@ -193,18 +193,14 @@ function issueSessionToken({ userId, sessionId, ttlSeconds }) {
 }
 
 function getSessionCookieAttributes() {
-  // En local, 'Secure' puede omitirse si no usas HTTPS;
-  // se mantiene como falso por defecto para compatibilidad con http://localhost
   const attrs = [
-    `${SESSION_COOKIE_NAME}=`, // el valor se adjunta en el controlador
+    `${SESSION_COOKIE_NAME}=`,
     'HttpOnly',
-    'SameSite=Strict',
-    'Path=/' // cookie válida para toda la app
+    'SameSite=None',
+    'Path=/',
+    'Secure'     // <- OBLIGATORIO para que Chrome no bloquee la cookie
   ];
-  // Si estás sirviendo por HTTPS local (proxy), puedes activar Secure:
-  if (process.env.COOKIE_SECURE === 'true') {
-    attrs.push('Secure');
-  }
+
   return attrs;
 }
 
